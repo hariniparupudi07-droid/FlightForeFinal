@@ -1,0 +1,63 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Decision Tree Classifier{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Decision Tree Classifier</h1>
+        <p>Non-linear recursive binary splitting using Gini impurity criteria.</p>
+    </div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <div class="selector-panel">
+        <h3>Tree Depth Hyperparameter (Max Depth):</h3>
+        <div class="btn-group">
+            {% for d in [3, 5, 6, 8, 10, 12] %}
+            <a href="{{ url_for('decision_tree', max_depth=d) }}"
+               class="btn-feature {% if max_depth == d %}active{% endif %}">
+                Depth = {{ d }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-box success">
+            <h4>Accuracy</h4>
+            <p style="color: #16a34a;">{{ metrics.accuracy }}</p>
+            <span class="metric-hint">Overall correct predictions</span>
+        </div>
+        <div class="metric-box">
+            <h4>Precision</h4>
+            <p>{{ metrics.precision }}</p>
+            <span class="metric-hint">Precision on delayed flights</span>
+        </div>
+        <div class="metric-box warning">
+            <h4>Recall</h4>
+            <p style="color: #d97706;">{{ metrics.recall }}</p>
+            <span class="metric-hint">Sensitivity to actual delays</span>
+        </div>
+        <div class="metric-box purple">
+            <h4>F1-Score</h4>
+            <p style="color: #7c3aed;">{{ metrics.f1 }}</p>
+            <span class="metric-hint">Harmonic mean</span>
+        </div>
+    </div>
+
+    <div class="cards" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="card">
+            <h3>Tree Architecture</h3>
+            <p>Constructs orthogonal decision boundaries based on feature thresholds up to <strong>Max Depth = {{ metrics.max_depth }}</strong>. Unlike linear models, decision trees effortlessly capture non-linear step-function patterns.</p>
+        </div>
+        <div class="card">
+            <h3>Bias vs. Variance Trade-off</h3>
+            <p>Constraining depth to 5-6 prevents the tree from creating overly specific leaf partitions that overfit training noise.</p>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

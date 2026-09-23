@@ -1,0 +1,63 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Random Forest Ensemble{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Random Forest Classifier (Ensemble)</h1>
+        <p>Bootstrap aggregation of decorrelated decision trees to minimize prediction variance.</p>
+    </div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <div class="selector-panel">
+        <h3>Ensemble Size Hyperparameter (n_estimators):</h3>
+        <div class="btn-group">
+            {% for n in [10, 25, 50, 75, 100] %}
+            <a href="{{ url_for('random_forest', n_estimators=n) }}"
+               class="btn-feature {% if n_estimators == n %}active{% endif %}">
+                {{ n }} Trees
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-box success">
+            <h4>Accuracy</h4>
+            <p style="color: #16a34a;">{{ metrics.accuracy }}</p>
+            <span class="metric-hint">Highest accuracy across classifiers</span>
+        </div>
+        <div class="metric-box">
+            <h4>Precision</h4>
+            <p>{{ metrics.precision }}</p>
+            <span class="metric-hint">Confidence in positive alerts</span>
+        </div>
+        <div class="metric-box warning">
+            <h4>Recall</h4>
+            <p style="color: #d97706;">{{ metrics.recall }}</p>
+            <span class="metric-hint">Proportion of delays detected</span>
+        </div>
+        <div class="metric-box purple">
+            <h4>F1-Score</h4>
+            <p style="color: #7c3aed;">{{ metrics.f1 }}</p>
+            <span class="metric-hint">F1 measurement</span>
+        </div>
+    </div>
+
+    <div class="cards" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="card">
+            <h3>Bagging & Feature Sub-sampling</h3>
+            <p>Aggregates <strong>{{ metrics.n_estimators }} independently trained trees</strong>. Each split examines only a random subset of $\sqrt{p}$ features, decorrelating the individual estimators.</p>
+        </div>
+        <div class="card">
+            <h3>Comparative Advantage</h3>
+            <p>Averages individual tree predictions via majority voting, effectively eliminating individual tree variance and outperforming both linear baselines and single decision trees.</p>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

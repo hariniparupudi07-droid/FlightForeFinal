@@ -1,0 +1,160 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>FlightFore Machine Learning Dashboard</h1>
+    <div class="welcome-card">
+        <h2>Welcome to FlightFore</h2>
+        <p>An end-to-end flight delay analysis and predictive modeling dashboard comparing linear baselines, regularised regression, tree ensemble methods, and unsupervised clustering.</p>
+        <div class="cards">
+            <div class="card">
+                <h2>Data Loading</h2>
+                <p>Sample inspection & summary</p>
+                <a href="{{ url_for('data_loading') }}" class="btn-cyan" style="margin-top: 15px; font-size: 14px; padding: 8px 16px;">View Data</a>
+            </div>
+            <div class="card">
+                <h2>EDA</h2>
+                <p>14 charts & heat maps</p>
+                <a href="{{ url_for('eda') }}" class="btn-cyan" style="margin-top: 15px; font-size: 14px; padding: 8px 16px;">View EDA</a>
+            </div>
+            <div class="card">
+                <h2>Continuous Delay</h2>
+                <p>Linear, Ridge & Lasso</p>
+                <a href="{{ url_for('linear_regression') }}" class="btn-cyan" style="margin-top: 15px; font-size: 14px; padding: 8px 16px;">View Models</a>
+            </div>
+            <div class="card">
+                <h2>Classification</h2>
+                <p>Logistic, Tree & Forest</p>
+                <a href="{{ url_for('logistic_regression') }}" class="btn-cyan" style="margin-top: 15px; font-size: 14px; padding: 8px 16px;">View Models</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Predictor Card in the same exact Cyan style -->
+    <div class="welcome-card" style="margin-top: 25px;">
+        <h2>Live Flight Delay Predictor</h2>
+        <p>Enter flight parameters to calculate arrival delay prediction and delay probability:</p>
+
+        <form action="{{ url_for('index') }}" method="post" style="margin-top: 20px;">
+            <input type="hidden" name="predict" value="1">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; text-align: left;">
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Departure Delay (minutes):</label>
+                    <input type="number" name="dep_delay" value="{{ form_data.dep_delay }}" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Flight Distance (miles):</label>
+                    <input type="number" name="distance" value="{{ form_data.distance }}" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Scheduled Duration (mins):</label>
+                    <input type="number" name="sched_time" value="{{ form_data.sched_time }}" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Scheduled Departure (e.g. 1430):</label>
+                    <input type="number" name="sched_dep" value="{{ form_data.sched_dep }}" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Month (1 - 12):</label>
+                    <input type="number" name="month" value="{{ form_data.month }}" min="1" max="12" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; color: #079daf; display: block; margin-bottom: 6px;">Day of Week (1=Mon ... 7=Sun):</label>
+                    <input type="number" name="day_of_week" value="{{ form_data.day_of_week }}" min="1" max="7" style="width: 100%; padding: 10px; border: 2px solid #08b6c9; border-radius: 8px; font-size: 15px;" required>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: left;">
+                <button type="submit" class="btn-cyan">
+                    <i class="fa-solid fa-calculator"></i> Predict Flight Delay
+                </button>
+            </div>
+        </form>
+
+        {% if prediction %}
+        <div style="margin-top: 25px; padding: 20px; border: 2px solid #08b6c9; border-radius: 10px; background: #f4fbfc; text-align: left;">
+            <h3 style="margin-top: 0; color: #079daf;">Prediction Result:</h3>
+            <p style="font-size: 18px; margin: 6px 0;"><strong>Status:</strong>
+                {% if prediction.is_delayed %}
+                <span style="color: #d9534f; font-weight: bold;">Delayed (&ge; 15 mins)</span>
+                {% else %}
+                <span style="color: #5cb85c; font-weight: bold;">On-Time</span>
+                {% endif %}
+            </p>
+            <p style="font-size: 18px; margin: 6px 0;"><strong>Probability of Delay:</strong> {{ prediction.prob_delayed_pct }}%</p>
+            <p style="font-size: 18px; margin: 6px 0;"><strong>Expected Delay Duration:</strong>
+                {% if prediction.expected_delay_mins > 0 %}+{% endif %}{{ prediction.expected_delay_mins }} minutes
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Models Comparison Table -->
+    <div class="table-container" style="margin-top: 25px;">
+        <h2>Model Performance Comparison</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Task</th>
+                    <th>Metric 1</th>
+                    <th>Metric 2</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Linear Regression</strong></td>
+                    <td>Regression</td>
+                    <td>R² = 0.8974</td>
+                    <td>MAE = 10.11 mins</td>
+                    <td><a href="{{ url_for('linear_regression') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Ridge Regression</strong></td>
+                    <td>Regression</td>
+                    <td>R² = 0.8974</td>
+                    <td>MAE = 10.11 mins</td>
+                    <td><a href="{{ url_for('regularisation') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Lasso Regression</strong></td>
+                    <td>Regression</td>
+                    <td>R² = 0.8962</td>
+                    <td>MAE = 10.14 mins</td>
+                    <td><a href="{{ url_for('regularisation') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Logistic Regression</strong></td>
+                    <td>Classification</td>
+                    <td>Accuracy = 83.2%</td>
+                    <td>ROC-AUC = 0.884</td>
+                    <td><a href="{{ url_for('logistic_regression') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Decision Tree</strong></td>
+                    <td>Classification</td>
+                    <td>Accuracy = 83.4%</td>
+                    <td>F1 = 0.62</td>
+                    <td><a href="{{ url_for('decision_tree') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>Random Forest</strong></td>
+                    <td>Classification</td>
+                    <td>Accuracy = 84.1%</td>
+                    <td>F1 = 0.64</td>
+                    <td><a href="{{ url_for('random_forest') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+                <tr>
+                    <td><strong>K-Means Clustering</strong></td>
+                    <td>Clustering</td>
+                    <td>K = 3 Clusters</td>
+                    <td>Silhouette = 0.38</td>
+                    <td><a href="{{ url_for('kmeans_view') }}" style="color: #08b6c9; font-weight: bold;">View</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

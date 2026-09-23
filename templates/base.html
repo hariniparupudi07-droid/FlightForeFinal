@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FlightFore{% endblock %}</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<header class="top-header">
+    <h2>FlightFore</h2>
+</header>
+
+<div class="sidebar">
+    <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+        <i class="fa-solid fa-house"></i> Home
+    </a>
+    <a href="{{ url_for('data_loading') }}" class="{% if request.endpoint == 'data_loading' %}active{% endif %}">
+        <i class="fa-solid fa-database"></i> Data Loading
+    </a>
+    <a href="{{ url_for('eda') }}" class="{% if request.endpoint == 'eda' %}active{% endif %}">
+        <i class="fa-solid fa-chart-pie"></i> EDA
+    </a>
+    <a href="{{ url_for('preprocessing') }}" class="{% if request.endpoint == 'preprocessing' %}active{% endif %}">
+        <i class="fa-solid fa-filter"></i> Preprocessing
+    </a>
+    <a href="{{ url_for('linear_regression') }}" class="{% if request.endpoint == 'linear_regression' %}active{% endif %}">
+        <i class="fa-solid fa-chart-line"></i> Linear Regression
+    </a>
+    <a href="{{ url_for('regularisation') }}" class="{% if request.endpoint == 'regularisation' %}active{% endif %}">
+        <i class="fa-solid fa-sliders"></i> Regularisation
+    </a>
+    <a href="{{ url_for('logistic_regression') }}" class="{% if request.endpoint == 'logistic_regression' %}active{% endif %}">
+        <i class="fa-solid fa-bullseye"></i> Logistic Regression
+    </a>
+    <a href="{{ url_for('decision_tree') }}" class="{% if request.endpoint == 'decision_tree' %}active{% endif %}">
+        <i class="fa-solid fa-code-branch"></i> Decision Tree
+    </a>
+    <a href="{{ url_for('random_forest') }}" class="{% if request.endpoint == 'random_forest' %}active{% endif %}">
+        <i class="fa-solid fa-tree"></i> Random Forest
+    </a>
+    <a href="{{ url_for('kmeans_view') }}" class="{% if request.endpoint == 'kmeans_view' %}active{% endif %}">
+        <i class="fa-solid fa-cubes"></i> K-Means
+    </a>
+</div>
+
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>

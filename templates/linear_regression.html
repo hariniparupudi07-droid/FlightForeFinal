@@ -1,0 +1,104 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Linear Regression{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Linear Regression (Continuous Delay Duration)</h1>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <!-- Feature selector buttons: choose any one feature as one button -->
+    <div class="feature-selector">
+        <h3>Choose Any One Feature as One Button:</h3>
+        <div class="feature-btns">
+            <a href="{{ url_for('linear_regression', feature='ALL') }}"
+               class="btn-feat {% if selected_feature == 'ALL' or not selected_feature %}active{% endif %}">
+                All Features
+            </a>
+            {% for feat in features %}
+            <a href="{{ url_for('linear_regression', feature=feat) }}"
+               class="btn-feat {% if selected_feature == feat %}active{% endif %}">
+                {{ feat }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-box">
+            <h4>MAE</h4>
+            <p>{{ metrics.mae }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>MSE</h4>
+            <p>{{ metrics.mse }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>RMSE</h4>
+            <p>{{ metrics.rmse }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>R² Score</h4>
+            <p>{{ metrics.r2 }}</p>
+        </div>
+    </div>
+
+    {% if metrics.is_single_feature %}
+    <div class="card" style="text-align: left; margin-bottom: 25px;">
+        <h2>Simple Linear Regression Equation</h2>
+        <p style="font-size: 18px; font-weight: bold; color: #079daf; margin: 10px 0;">
+            {{ metrics.equation }}
+        </p>
+        <p><strong>Slope (m):</strong> {{ metrics.slope }} &nbsp;|&nbsp; <strong>Intercept (c):</strong> {{ metrics.intercept }}</p>
+    </div>
+
+    {% if metrics.chart_path %}
+    <div class="chart" style="margin-bottom: 25px;">
+        <h2>Fitted Regression Line for {{ metrics.feature_name }}</h2>
+        <img src="{{ url_for('static', filename=metrics.chart_path) }}" alt="Linear Regression Fit">
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card" style="text-align: left; margin-bottom: 25px;">
+        <h2>Model Summary (All Features)</h2>
+        <p>Predicts continuous delay duration in minutes on test splits using standardized flight inputs. <strong>DEPARTURE_DELAY</strong> holds the highest predictive power for flight arrival delay.</p>
+    </div>
+
+    {% if metrics.chart_path %}
+    <div class="chart" style="margin-bottom: 25px;">
+        <h2>Feature Weights (Coefficients)</h2>
+        <img src="{{ url_for('static', filename=metrics.chart_path) }}" alt="Feature Weights">
+    </div>
+    {% endif %}
+
+    {% if metrics.coefficients %}
+    <div class="table-container">
+        <h2>Feature Coefficients</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Coefficient (Weight)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in metrics.coefficients %}
+                <tr>
+                    <td><strong>{{ c.feature }}</strong></td>
+                    <td>{{ c.coef }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Preprocessing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+        <h1 style="margin: 0;">Preprocessing & Feature Engineering</h1>
+        <a href="{{ url_for('download_preprocessed') }}" class="btn-cyan">
+            <i class="fa-solid fa-download"></i> Download preprocessed_flights.csv ({{ info.csv_size_mb }} MB)
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <div class="success-message">
+        Null values removed, pre-departure predictors selected, and standard scaling applied.
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <h4>Cleaned Records</h4>
+            <p>{{ info.total_cleaned_samples }}</p>
+        </div>
+        <div class="info-box">
+            <h4>Training Samples (80%)</h4>
+            <p>{{ info.train_samples }}</p>
+        </div>
+        <div class="info-box">
+            <h4>Testing Samples (20%)</h4>
+            <p>{{ info.test_samples }}</p>
+        </div>
+    </div>
+
+    <div class="card" style="text-align: left; margin-bottom: 25px;">
+        <h2>Selected Predictor Features</h2>
+        <div class="column-list" style="border: none; padding: 0; box-shadow: none; margin-bottom: 15px;">
+            {% for f in info.features %}
+            <span>{{ f }}</span>
+            {% endfor %}
+        </div>
+        <p><strong>Scaling:</strong> {{ info.scaled_features }}</p>
+        <p style="margin-top: 8px;"><strong>Regression Target:</strong> {{ info.target_reg }}</p>
+        <p style="margin-top: 8px;"><strong>Classification Target:</strong> {{ info.target_clf }} (Delay Ratio: {{ info.delay_ratio }})</p>
+    </div>
+
+    <div class="table-container">
+        <h2>Preprocessed Data Sample (First 8 Cleaned Rows)</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for col in info.preview_columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                    <th>ARRIVAL_DELAY</th>
+                    <th>IS_DELAYED</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in info.preview_rows %}
+                <tr>
+                    {% for col in info.preview_columns %}
+                    <td>{{ row[col] }}</td>
+                    {% endfor %}
+                    <td><strong>{{ row['ARRIVAL_DELAY'] }}</strong></td>
+                    <td>
+                        {% if row['IS_DELAYED'] == 1 %}
+                        <span style="color: #d9534f; font-weight: bold;">Delayed (1)</span>
+                        {% else %}
+                        <span style="color: #5cb85c; font-weight: bold;">On-Time (0)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

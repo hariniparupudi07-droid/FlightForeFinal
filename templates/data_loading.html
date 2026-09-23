@@ -1,0 +1,84 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Data Loading{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Data Loading & Summary</h1>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <div class="cards">
+        <div class="card">
+            <h2>{{ summary.rows }}</h2>
+            <p>Total Flights Loaded</p>
+        </div>
+        <div class="card">
+            <h2>{{ summary.columns }}</h2>
+            <p>Total Columns</p>
+        </div>
+        <div class="card">
+            <h2>{{ summary.missing_values }}</h2>
+            <p>Total Missing Cells</p>
+        </div>
+        <div class="card">
+            <h2>{{ summary.duplicate_rows }}</h2>
+            <p>Duplicate Rows</p>
+        </div>
+    </div>
+
+    <div class="column-list">
+        <h2>Dataset Columns ({{ summary.column_names|length }})</h2>
+        {% for col in summary.column_names %}
+        <span>{{ col }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="table-container">
+        <h2>First 5 Rows</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for col in summary.column_names[:10] %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in summary.first_5_rows %}
+                <tr>
+                    {% for col in summary.column_names[:10] %}
+                    <td>{{ row[col] if row[col] is not none else '—' }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <h2>Last 5 Rows</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for col in summary.column_names[:10] %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in summary.last_5_rows %}
+                <tr>
+                    {% for col in summary.column_names[:10] %}
+                    <td>{{ row[col] if row[col] is not none else '—' }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

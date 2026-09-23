@@ -1,0 +1,76 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - Logistic Regression{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Logistic Regression (Delay Classification)</h1>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% else %}
+
+    <div class="metrics-grid">
+        <div class="metric-box">
+            <h4>Accuracy</h4>
+            <p>{{ metrics.accuracy }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>Precision</h4>
+            <p>{{ metrics.precision }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>Recall</h4>
+            <p>{{ metrics.recall }}</p>
+        </div>
+        <div class="metric-box">
+            <h4>F1-Score</h4>
+            <p>{{ metrics.f1 }}</p>
+        </div>
+    </div>
+
+    <div class="card" style="text-align: left; margin-bottom: 25px;">
+        <h2>Target Definition</h2>
+        <p>Binary Classification: <strong>Delayed (1)</strong> if Arrival Delay &ge; 15 minutes, else <strong>On-Time (0)</strong>. ROC-AUC Score: <strong>{{ metrics.roc_auc }}</strong>.</p>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart">
+            <h2>Confusion Matrix Heatmap</h2>
+            <img src="{{ url_for('static', filename=metrics.cm_chart) }}" alt="Confusion Matrix">
+            <p style="margin-top: 10px;">
+                TP: {{ metrics.true_positives }} | TN: {{ metrics.true_negatives }} | FP: {{ metrics.false_positives }} | FN: {{ metrics.false_negatives }}
+            </p>
+        </div>
+        <div class="chart">
+            <h2>Feature Weights (Log-Odds)</h2>
+            <img src="{{ url_for('static', filename=metrics.weights_chart) }}" alt="Feature Weights">
+        </div>
+    </div>
+
+    {% if metrics.feature_impacts %}
+    <div class="table-container">
+        <h2>Feature Odds Ratio</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Coefficient</th>
+                    <th>Odds Ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fi in metrics.feature_impacts %}
+                <tr>
+                    <td><strong>{{ fi.feature }}</strong></td>
+                    <td>{{ fi.coefficient }}</td>
+                    <td><strong>{{ fi.odds_ratio }}x</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+﻿{% extends "base.html" %}
+{% block title %}FlightFore - K-Means Clustering{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>K-Means Clustering</h1>
+        <p>Unsupervised clustering partitioning flights by distance, scheduled block time, and delay magnitude.</p>
+    </div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <!-- Method Selector Panel -->
+    <div class="selector-panel">
+        <h3>Cluster Count (K) Selection Strategy:</h3>
+        <p style="color: #64748b; font-size: 13.5px; margin-bottom: 14px;">
+            Features clustered: <code>DISTANCE</code>, <code>SCHEDULED_TIME</code>, <code>SCHEDULED_DEPARTURE</code>, <code>DEPARTURE_DELAY</code>, and <code>ARRIVAL_DELAY</code> (standardized).
+        </p>
+
+        <form action="{{ url_for('kmeans_view') }}" method="get" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center; font-size: 14px;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                    <input type="radio" name="method" value="silhouette" {% if method == 'silhouette' or not method %}checked{% endif %}>
+                    Silhouette Method (Auto-detect Optimal K)
+                </label>
+
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                    <input type="radio" name="method" value="elbow" {% if method == 'elbow' %}checked{% endif %}>
+                    Elbow Method (View WCSS Curve)
+                </label>
+
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                    <input type="radio" name="method" value="manual" {% if method == 'manual' %}checked{% endif %}>
+                    Manual K:
+                </label>
+
+                <input type="number" name="manual_k" min="2" max="10" placeholder="e.g. 3"
+                       value="{{ request.args.get('manual_k', '') }}"
+                       style="width: 80px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px;">
+            </div>
+
+            <div style="margin-top: 4px;">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-play"></i> Run Clustering
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if result %}
+
+        {% if result.error %}
+        <div class="error">{{ result.error }}</div>
+        {% endif %}
+
+        <!-- Elbow Method View -->
+        {% if result.elbow %}
+        <div class="card" style="margin-bottom: 22px;">
+            <h3>Elbow Method (Within-Cluster Sum of Squares)</h3>
+            <p style="margin-bottom: 12px;">Locate the point on the curve where inertia reduction starts tapering off linearly.</p>
+            <div style="text-align: center;">
+                <img src="{{ url_for('static', filename=result.elbow.chart) }}" alt="Elbow Method Curve" style="max-width: 800px; width: 100%; border-radius: 6px;">
+            </div>
+            <div class="table-container" style="max-width: 480px; margin: 16px auto 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Number of Clusters (K)</th>
+                            <th>WCSS Inertia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for k_val, wcss_val in zip(result.elbow.k_values, result.elbow.wcss) %}
+                        <tr>
+                            <td><strong>K = {{ k_val }}</strong></td>
+                            <td>{{ "{:,.2f}".format(wcss_val) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: center; margin-top: 14px; color: #0284c7; font-size: 14px;">
+                <i class="fa-solid fa-circle-info"></i> {{ result.note }}
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Silhouette Method View -->
+        {% if result.silhouette %}
+        <div class="card" style="margin-bottom: 22px;">
+            <h3>Silhouette Coefficient Evaluation</h3>
+            <p style="margin-bottom: 12px;">Measures intra-cluster tightness vs. separation from the next closest cluster.</p>
+            <div style="text-align: center;">
+                <img src="{{ url_for('static', filename=result.silhouette.chart) }}" alt="Silhouette Method Curve" style="max-width: 800px; width: 100%; border-radius: 6px;">
+            </div>
+            <div class="callout" style="text-align: center; margin-top: 16px;">
+                <p>
+                    <strong>Recommendation:</strong> Highest silhouette score achieved at <strong>K = {{ result.silhouette.best_k }}</strong> (Score: <strong>{{ result.silhouette.best_score }}</strong>).
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Clustering Result View -->
+        {% if result.clustering %}
+        <div class="card" style="margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <h3>Cluster Partitions (K = {{ result.clustering.k }})</h3>
+                <span style="font-size: 13.5px; color: #64748b;">Total Inertia: {{ "{:,.2f}".format(result.clustering.inertia) }}</span>
+            </div>
+
+            {% if result.clustering.cluster_chart %}
+            <div style="text-align: center; margin: 16px 0;">
+                <img src="{{ url_for('static', filename=result.clustering.cluster_chart) }}" alt="PCA 2D Cluster Map" style="max-width: 800px; width: 100%; border-radius: 6px;">
+            </div>
+            {% endif %}
+
+            <!-- Cluster Profiling Table -->
+            <div class="table-container">
+                <h3>Cluster Archetypes & Domain Profile</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Cluster ID</th>
+                            <th>Flight Count</th>
+                            <th>Share</th>
+                            <th>Avg Distance</th>
+                            <th>Avg Sched. Time</th>
+                            <th>Avg Dep. Delay</th>
+                            <th>Avg Arr. Delay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in result.clustering.profiles %}
+                        <tr>
+                            <td><strong>Cluster {{ p.cluster_id }}</strong></td>
+                            <td>{{ "{:,}".format(p.count) }} flights</td>
+                            <td><span class="tag primary">{{ p.percentage }}</span></td>
+                            <td>{{ p.avg_distance }} mi</td>
+                            <td>{{ p.avg_sched_time }} min</td>
+                            <td>
+                                {% if p.avg_dep_delay|float > 15 %}
+                                <span style="color: #dc2626; font-weight: 600;">+{{ p.avg_dep_delay }} min</span>
+                                {% else %}
+                                <span style="color: #16a34a;">{{ p.avg_dep_delay }} min</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.avg_arr_delay|float > 15 %}
+                                <span style="color: #dc2626; font-weight: 600;">+{{ p.avg_arr_delay }} min</span>
+                                {% else %}
+                                <span style="color: #16a34a;">{{ p.avg_arr_delay }} min</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="font-size: 13px; color: #64748b; margin-top: 8px;">
+                <strong>Sample Cluster Assignments (First 15 Flights):</strong> <code>{{ result.clustering.labels_preview }}</code>
+            </p>
+        </div>
+        {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}
